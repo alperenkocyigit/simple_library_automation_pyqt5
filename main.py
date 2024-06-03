@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox
 from PyQt5.uic import loadUi
 import sqlite3
 
@@ -25,7 +25,7 @@ class LibraryAutomation(QMainWindow):
         # Connect buttons to functions
         self.pushButtonAddBook.clicked.connect(self.add_book)
         self.pushButtonUpdateBook.clicked.connect(self.update_book)
-        self.pushButtonDeleteBook.clicked.connect(self.delete_book)
+        self.pushButtonDeleteBook.clicked.connect(self.confirm_delete_book)
         
         self.pushButtonAddCategory.clicked.connect(self.add_category)
         self.pushButtonUpdateCategory.clicked.connect(self.update_category)
@@ -36,6 +36,9 @@ class LibraryAutomation(QMainWindow):
         self.pushButtonDeleteAuthor.clicked.connect(self.delete_author)
 
         self.pushButtonSearchBook.clicked.connect(self.search_books)
+
+        # Connect table widget to select row
+        self.tableWidgetBooks.itemSelectionChanged.connect(self.on_book_selection_changed)
 
     def setup_books_table(self):
         self.tableWidgetBooks.setColumnCount(4)
@@ -112,8 +115,18 @@ class LibraryAutomation(QMainWindow):
         self.conn.commit()
         self.load_books()
 
-    def delete_book(self):
-        book_id = self.lineEditBookID.text()
+    def confirm_delete_book(self):
+        selected_row = self.tableWidgetBooks.currentRow()
+        if selected_row != -1:
+            book_id = self.tableWidgetBooks.item(selected_row, 0).text()
+            book_title = self.tableWidgetBooks.item(selected_row, 1).text()
+            reply = QMessageBox.question(self, 'Confirm Delete', f"Are you sure you want to delete the book '{book_title}'?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                self.delete_book(book_id)
+        else:
+            QMessageBox.warning(self, 'No Selection', 'Please select a book to delete.')
+
+    def delete_book(self, book_id):
         self.c.execute("DELETE FROM books WHERE id = ?", (book_id,))
         self.conn.commit()
         self.load_books()
@@ -171,6 +184,16 @@ class LibraryAutomation(QMainWindow):
         for row_num, row_data in enumerate(books):
             for col_num, col_data in enumerate(row_data):
                 self.tableWidgetBooks.setItem(row_num, col_num, QTableWidgetItem(str(col_data)))
+
+    def on_book_selection_changed(self):
+        selected_row = self.tableWidgetBooks.currentRow()
+        if selected_row != -1:
+            self.lineEditBookID.setText(self.tableWidgetBooks.item(selected_row, 0).text())
+            self.lineEditBookTitle.setText(self.tableWidgetBooks.item(selected_row, 1).text())
+            category_id = self.tableWidgetBooks.item(selected_row, 2).text()
+            author_id = self.tableWidgetBooks.item(selected_row, 3).text()
+            self.comboBoxBookCategory.setCurrentIndex(self.comboBoxBookCategory.findData(int(category_id)))
+            self.comboBoxBookAuthor.setCurrentIndex(self.comboBoxBookAuthor.findData(int(author_id)))
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
