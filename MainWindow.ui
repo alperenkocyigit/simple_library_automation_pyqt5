@@ -315,6 +315,22 @@
      </widget>
     </widget>
    </widget>
+   <widget class="QLabel" name="labelAuthor">
+    <property name="geometry">
+     <rect>
+      <x>620</x>
+      <y>530</y>
+      <width>150</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignVCenter</set>
+    </property>
+    <property name="text">
+     <string>Alperen KOÇYİĞİT</string>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources/>
