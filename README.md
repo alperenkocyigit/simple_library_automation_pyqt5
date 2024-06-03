@@ -60,8 +60,11 @@ This is a Library Automation System built using PyQt5 and SQLite. The applicatio
     * Click "Add" to add a new author, "Update" to update the selected author, or "Delete" to delete the selected author.
 
 4. **Code Structure:**
+    
     **main.py**: The main application file that contains the logic for the GUI and CRUD operations.
+    
     **MainWindow.ui**: The UI file designed using Qt Designer.
+    
     **setup_database.py**: Script to set up the SQLite database and create the required tables.
 
 ## Author
