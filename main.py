@@ -19,6 +19,8 @@ class LibraryAutomation(QMainWindow):
         self.load_books()
         self.load_categories()
         self.load_authors()
+        self.load_category_dropdown()
+        self.load_author_dropdown()
 
         # Connect buttons to functions
         self.pushButtonAddBook.clicked.connect(self.add_book)
@@ -32,6 +34,8 @@ class LibraryAutomation(QMainWindow):
         self.pushButtonAddAuthor.clicked.connect(self.add_author)
         self.pushButtonUpdateAuthor.clicked.connect(self.update_author)
         self.pushButtonDeleteAuthor.clicked.connect(self.delete_author)
+
+        self.pushButtonSearchBook.clicked.connect(self.search_books)
 
     def setup_books_table(self):
         self.tableWidgetBooks.setColumnCount(4)
@@ -77,10 +81,24 @@ class LibraryAutomation(QMainWindow):
             for col_num, col_data in enumerate(row_data):
                 self.tableWidgetAuthors.setItem(row_num, col_num, QTableWidgetItem(str(col_data)))
 
+    def load_category_dropdown(self):
+        self.comboBoxBookCategory.clear()
+        self.c.execute("SELECT id, name FROM categories")
+        categories = self.c.fetchall()
+        for category in categories:
+            self.comboBoxBookCategory.addItem(category[1], category[0])
+
+    def load_author_dropdown(self):
+        self.comboBoxBookAuthor.clear()
+        self.c.execute("SELECT id, name FROM authors")
+        authors = self.c.fetchall()
+        for author in authors:
+            self.comboBoxBookAuthor.addItem(author[1], author[0])
+
     def add_book(self):
         title = self.lineEditBookTitle.text()
-        category_id = self.lineEditBookCategory.text()
-        author_id = self.lineEditBookAuthor.text()
+        category_id = self.comboBoxBookCategory.currentData()
+        author_id = self.comboBoxBookAuthor.currentData()
         self.c.execute("INSERT INTO books (title, category_id, author_id) VALUES (?, ?, ?)", (title, category_id, author_id))
         self.conn.commit()
         self.load_books()
@@ -88,8 +106,8 @@ class LibraryAutomation(QMainWindow):
     def update_book(self):
         book_id = self.lineEditBookID.text()
         title = self.lineEditBookTitle.text()
-        category_id = self.lineEditBookCategory.text()
-        author_id = self.lineEditBookAuthor.text()
+        category_id = self.comboBoxBookCategory.currentData()
+        author_id = self.comboBoxBookAuthor.currentData()
         self.c.execute("UPDATE books SET title = ?, category_id = ?, author_id = ? WHERE id = ?", (title, category_id, author_id, book_id))
         self.conn.commit()
         self.load_books()
@@ -105,6 +123,7 @@ class LibraryAutomation(QMainWindow):
         self.c.execute("INSERT INTO categories (name) VALUES (?)", (name,))
         self.conn.commit()
         self.load_categories()
+        self.load_category_dropdown()
 
     def update_category(self):
         category_id = self.lineEditCategoryID.text()
@@ -112,18 +131,21 @@ class LibraryAutomation(QMainWindow):
         self.c.execute("UPDATE categories SET name = ? WHERE id = ?", (name, category_id))
         self.conn.commit()
         self.load_categories()
+        self.load_category_dropdown()
 
     def delete_category(self):
         category_id = self.lineEditCategoryID.text()
         self.c.execute("DELETE FROM categories WHERE id = ?", (category_id,))
         self.conn.commit()
         self.load_categories()
+        self.load_category_dropdown()
 
     def add_author(self):
         name = self.lineEditAuthorName.text()
         self.c.execute("INSERT INTO authors (name) VALUES (?)", (name,))
         self.conn.commit()
         self.load_authors()
+        self.load_author_dropdown()
 
     def update_author(self):
         author_id = self.lineEditAuthorID.text()
@@ -131,12 +153,24 @@ class LibraryAutomation(QMainWindow):
         self.c.execute("UPDATE authors SET name = ? WHERE id = ?", (name, author_id))
         self.conn.commit()
         self.load_authors()
+        self.load_author_dropdown()
 
     def delete_author(self):
         author_id = self.lineEditAuthorID.text()
         self.c.execute("DELETE FROM authors WHERE id = ?", (author_id,))
         self.conn.commit()
         self.load_authors()
+        self.load_author_dropdown()
+
+    def search_books(self):
+        search_text = self.lineEditSearchBook.text()
+        query = f"SELECT * FROM books WHERE title LIKE ?"
+        self.c.execute(query, (f'%{search_text}%',))
+        books = self.c.fetchall()
+        self.tableWidgetBooks.setRowCount(len(books))
+        for row_num, row_data in enumerate(books):
+            for col_num, col_data in enumerate(row_data):
+                self.tableWidgetBooks.setItem(row_num, col_num, QTableWidgetItem(str(col_data)))
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
